@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Moto Delivery - Câmera Corrigida</title>
+    <title>Moto Delivery - Mobile Tunado</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -38,7 +38,7 @@
 
         /* UI DO JOGO */
         #resetBtn {
-            position: absolute; top: 20px; left: 20px;
+            position: absolute; top: 15px; left: 15px;
             background: #e74c3c; color: white; border: 2px solid #fff;
             padding: 8px 15px; border-radius: 20px; font-weight: bold;
             cursor: pointer; z-index: 20; box-shadow: 0 4px 5px rgba(0,0,0,0.3);
@@ -47,18 +47,18 @@
 
         .touch-controls {
             position: absolute; bottom: 20px;
-            z-index: 100; display: flex; gap: 20px;
+            z-index: 100; display: flex; gap: 15px;
         }
         
-        .controls-left { left: 30px; }
-        .controls-right { right: 30px; align-items: flex-end; }
+        .controls-left { left: 20px; }
+        .controls-right { right: 20px; align-items: flex-end; }
 
         .btn {
-            width: 70px; height: 70px; 
+            width: 65px; height: 65px; 
             background: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
-            color: white; font-size: 28px; font-weight: bold;
+            color: white; font-size: 24px; font-weight: bold;
             display: flex; justify-content: center; align-items: center;
             backdrop-filter: blur(4px);
             transition: transform 0.1s, background 0.1s;
@@ -70,16 +70,16 @@
             transform: scale(0.90);
         }
 
-        .btn-gas { width: 90px; height: 90px; background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
-        .btn-brake { width: 65px; height: 65px; background: rgba(231, 76, 60, 0.2); border-color: #c0392b; margin-right: 15px; }
-        .btn-arrow { font-size: 35px; }
+        .btn-gas { width: 85px; height: 85px; background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
+        .btn-brake { width: 60px; height: 60px; background: rgba(231, 76, 60, 0.2); border-color: #c0392b; margin-right: 10px; }
+        .btn-arrow { font-size: 30px; }
 
         .gas-group { display: flex; align-items: flex-end; }
 
         .score-board { 
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 30px;
-            border: 2px solid #fff; color: #fff; font-size: 20px; font-weight: bold;
+            border: 2px solid #fff; color: #fff; font-size: 18px; font-weight: bold;
             z-index: 10; white-space: nowrap;
         }
         #scoreVal { color: #f1c40f; }
@@ -98,13 +98,13 @@
         @keyframes pulseBig { from { transform: scale(1); } to { transform: scale(1.1); } }
 
         #balanceContainer {
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 10px; background: rgba(0,0,0,0.5);
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 8px; background: rgba(0,0,0,0.5);
             border-radius: 10px; border: 2px solid #fff; display: none; overflow: hidden; z-index: 10;
         }
         #balanceFill { height: 100%; width: 0%; background: linear-gradient(90deg, #f1c40f, #e74c3c); transition: width 0.1s linear; }
 
-        #dashboard { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; z-index: 10; pointer-events: none; transform: scale(0.6); transform-origin: top right; }
+        #dashboard { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; z-index: 10; pointer-events: none; transform: scale(0.5); transform-origin: top right; }
         .gauge { width: 180px; height: 180px; background: #f4e6c0; border-radius: 50%; border: 8px solid #5d4037; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 4px #8d6e63; position: relative; display: flex; justify-content: center; align-items: center; }
         .gauge::after, .gauge::before { content: ''; position: absolute; width: 8px; height: 8px; background: #aaa; border-radius: 50%; }
         .gauge::after { top: 5px; left: 50%; transform: translateX(-50%); box-shadow: 0 154px 0 #aaa; }
@@ -206,7 +206,9 @@
     let wheelieStartTime = null; 
 
     const FINISH_LINE_X = 45000;
-    const SCALE_FACTOR = 1.25; 
+    // --- AJUSTE CRÍTICO PARA MOBILE ---
+    // Reduzi a escala da moto de 1.25 para 0.6. Isso vai fazê-la caber na tela.
+    const SCALE_FACTOR = 0.6; 
 
     // --- AUDIO ---
     let audioCtx, idleSource, revSource, idleGain, revGain;
@@ -496,15 +498,15 @@
         if (wr.angularVelocity > MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, MAX_WHEEL_SPIN);
         if (wr.angularVelocity < -MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, -MAX_WHEEL_SPIN);
 
-        // --- CÂMERA CORRIGIDA (FOCADA NO TOPO) ---
-        // 35% (0.35) a partir do topo = Moto na parte SUPERIOR da tela
-        // Isso força a câmera a olhar para baixo, mostrando o chão.
-        const zoomFactor = 1.1; 
+        // --- CÂMERA OTIMIZADA PARA MOBILE ---
+        // Zoom out para ver mais pista (1.5x)
+        const zoomFactor = 1.5; 
         const viewWidth = window.innerWidth * zoomFactor;
         const viewHeight = window.innerHeight * zoomFactor;
         
-        const targetX = viewWidth * 0.20;
-        const targetY = viewHeight * 0.35; // Moto mais alta = Mais chão visível
+        // Posição: Moto em 25% da esquerda e 55% da altura (levemente abaixo do meio)
+        const targetX = viewWidth * 0.25;
+        const targetY = viewHeight * 0.55; 
 
         render.bounds.min.x = chassis.position.x - targetX;
         render.bounds.max.x = chassis.position.x + (viewWidth - targetX);
