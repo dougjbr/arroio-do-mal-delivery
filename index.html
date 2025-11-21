@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Moto Delivery - Camera Fix</title>
+    <title>Moto Delivery - Camera Inteligente</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -299,6 +299,7 @@
         idleSource.start(0); revSource.start(0);
     }
 
+    // --- GAME LOGIC ---
     const BIKE_SPECS = {
         name: "Landera do Douglas",
         bodyTexture: 'lander_corpo.png', rearWheelTexture: 'lander_roda_tras.png', frontWheelTexture: 'lander_roda_frente.png',
@@ -495,12 +496,18 @@
         if (wr.angularVelocity > MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, MAX_WHEEL_SPIN);
         if (wr.angularVelocity < -MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, -MAX_WHEEL_SPIN);
 
-        // --- CÂMERA CORRIGIDA (CENTRALIZADA NO VERTICAL) ---
+        // --- CÂMERA INTELIGENTE (ADAPTATIVA) ---
+        const windowRatio = window.innerWidth / window.innerHeight;
+        // Se a tela for "larga" (PC), a moto fica em baixo (0.75)
+        // Se a tela for "fina" (Celular), a moto sobe para o meio (0.60) para mostrar chão
+        const targetVerticalPos = windowRatio > 1.5 ? 0.75 : 0.60; 
+
         const zoomFactor = 1.0; 
         const viewWidth = window.innerWidth * zoomFactor;
         const viewHeight = window.innerHeight * zoomFactor;
+        
         const targetX = viewWidth * 0.20;
-        const targetY = viewHeight * 0.50; // Centraliza verticalmente
+        const targetY = viewHeight * targetVerticalPos; // Posição Y dinâmica
 
         render.bounds.min.x = chassis.position.x - targetX;
         render.bounds.max.x = chassis.position.x + (viewWidth - targetX);
