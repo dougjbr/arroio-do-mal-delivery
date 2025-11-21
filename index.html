@@ -2,27 +2,114 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Moto Delivery - Som Tunado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Moto Delivery - Mobile Final</title>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #000; background-image: url('fundo2.jpg'); background-repeat: repeat-x; background-size: auto 100vh; background-position: 0px 0px; touch-action: none; user-select: none; }
-        #resetBtn { position: absolute; top: 20px; left: 20px; background: #e74c3c; color: white; border: 2px solid #fff; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; z-index: 20; box-shadow: 0 4px 5px rgba(0,0,0,0.3); }
-        .touch-controls { position: absolute; bottom: 30px; z-index: 100; display: flex; gap: 15px; }
-        .controls-left { left: 30px; } .controls-right { right: 30px; align-items: flex-end; }
-        .btn { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: white; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: transform 0.1s, background 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .btn:active, .btn.pressed { background: rgba(255, 255, 255, 0.5); transform: scale(0.95); }
-        .btn-gas { width: 100px; height: 100px; background: rgba(46, 204, 113, 0.3); border-color: #2ecc71; }
-        .btn-brake { width: 70px; height: 70px; background: rgba(231, 76, 60, 0.3); border-color: #c0392b; margin-right: 10px; }
-        .btn-arrow { font-size: 40px; }
-        .gas-group { display: flex; align-items: flex-end; gap: 15px; }
-        .score-board { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 30px; border: 2px solid #fff; color: #fff; font-size: 24px; font-weight: bold; z-index: 10; }
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #000; 
+            background-image: url('fundo2.jpg'); 
+            background-repeat: repeat-x; 
+            background-size: auto 100vh; 
+            background-position: 0px 0px; 
+            touch-action: none; /* Impede gestos do navegador */
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+
+        /* --- TELA DE AVISO DE ROTAÇÃO --- */
+        #rotateOverlay {
+            display: none; /* Escondido por padrão */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; z-index: 9999;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center;
+        }
+        .rotate-icon {
+            font-size: 80px; margin-bottom: 20px;
+            animation: rotatePhone 2s infinite ease-in-out;
+        }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+
+        /* Regra CSS: Se a altura for maior que a largura (Celular em pé), mostra o aviso */
+        @media screen and (orientation: portrait) {
+            #rotateOverlay { display: flex; }
+            #gameContainer { display: none; } /* Esconde o jogo */
+        }
+
+        /* --- UI DO JOGO --- */
+        #resetBtn {
+            position: absolute; top: 20px; left: 20px;
+            background: #e74c3c; color: white; border: 2px solid #fff;
+            padding: 8px 15px; border-radius: 20px; font-weight: bold;
+            cursor: pointer; z-index: 20; box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+            font-size: 14px;
+        }
+
+        /* Controles de Toque - Espaçados para Paisagem */
+        .touch-controls {
+            position: absolute; bottom: 20px;
+            z-index: 100; display: flex; gap: 20px;
+        }
+        
+        .controls-left { left: 30px; }
+        .controls-right { right: 30px; align-items: flex-end; }
+
+        .btn {
+            width: 70px; height: 70px; /* Tamanho bom para o dedão */
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            color: white; font-size: 28px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
+            transition: transform 0.1s, background 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active, .btn.pressed {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.90);
+        }
+
+        .btn-gas { width: 90px; height: 90px; background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
+        .btn-brake { width: 65px; height: 65px; background: rgba(231, 76, 60, 0.2); border-color: #c0392b; margin-right: 15px; }
+        .btn-arrow { font-size: 35px; }
+
+        .gas-group { display: flex; align-items: flex-end; }
+
+        .score-board { 
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 30px;
+            border: 2px solid #fff; color: #fff; font-size: 20px; font-weight: bold;
+            z-index: 10; white-space: nowrap;
+        }
         #scoreVal { color: #f1c40f; }
-        #centerMessageContainer { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 90; pointer-events: none; display: none; text-shadow: 3px 3px 0 #000; font-family: 'Impact', sans-serif; text-transform: uppercase; white-space: nowrap; }
-        .stage1 { color: #f1c40f; font-size: 48px; } .stage2 { color: #e67e22; font-size: 52px; } .stage3 { color: #2ecc71; font-size: 64px; } .stage4 { color: #3498db; font-size: 80px; animation: pulseBig 0.5s infinite alternate; }
+
+        #centerMessageContainer {
+            position: absolute; top: 30%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center; z-index: 90;
+            pointer-events: none; display: none;
+            text-shadow: 3px 3px 0 #000;
+            font-family: 'Impact', sans-serif; text-transform: uppercase; white-space: nowrap;
+        }
+        .stage1 { color: #f1c40f; font-size: 40px; } 
+        .stage2 { color: #e67e22; font-size: 45px; } 
+        .stage3 { color: #2ecc71; font-size: 55px; } 
+        .stage4 { color: #3498db; font-size: 70px; animation: pulseBig 0.5s infinite alternate; }
         @keyframes pulseBig { from { transform: scale(1); } to { transform: scale(1.1); } }
-        #balanceContainer { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 200px; height: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 2px solid #fff; display: none; overflow: hidden; z-index: 10; }
+
+        #balanceContainer {
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 10px; background: rgba(0,0,0,0.5);
+            border-radius: 10px; border: 2px solid #fff; display: none; overflow: hidden; z-index: 10;
+        }
         #balanceFill { height: 100%; width: 0%; background: linear-gradient(90deg, #f1c40f, #e74c3c); transition: width 0.1s linear; }
-        #dashboard { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; pointer-events: none; transform: scale(0.8); transform-origin: top right; }
+
+        #dashboard { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; z-index: 10; pointer-events: none; transform: scale(0.6); transform-origin: top right; }
         .gauge { width: 180px; height: 180px; background: #f4e6c0; border-radius: 50%; border: 8px solid #5d4037; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 4px #8d6e63; position: relative; display: flex; justify-content: center; align-items: center; }
         .gauge::after, .gauge::before { content: ''; position: absolute; width: 8px; height: 8px; background: #aaa; border-radius: 50%; }
         .gauge::after { top: 5px; left: 50%; transform: translateX(-50%); box-shadow: 0 154px 0 #aaa; }
@@ -33,57 +120,71 @@
         .needle { position: absolute; top: 50%; left: 50%; width: 6px; height: 70px; background: #c0392b; border-radius: 5px; transform-origin: bottom center; transform: translate(-50%, -100%) rotate(-135deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.3); transition: transform 0.1s linear; z-index: 2; }
         .needle-center { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; background: #333; transform: translate(-50%, -50%); border-radius: 50%; z-index: 3; }
         #woodSign { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #8b4513; color: #fff; padding: 5px 15px; border: 2px solid #5d4037; border-radius: 4px; font-family: 'Comic Sans MS', cursive; font-size: 14px; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        #startHint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #fff; padding: 20px; border-radius: 10px; z-index: 300; font-size: 20px; text-align: center; border: 2px solid #fff; animation: pulse 1s infinite; cursor: pointer;}
-        #audioFileControl { display: none; position: absolute; top: 60%; left: 50%; transform: translateX(-50%); z-index: 301; background: #f1c40f; padding: 10px; border-radius: 5px; color: black; font-weight: bold; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #messageScreen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #e74c3c; color: white; padding: 40px; border-radius: 20px; text-align: center; border: 5px solid white; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        #startOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: #fff; z-index: 300; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #startOverlay h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
+        #startBtn { padding: 15px 40px; font-size: 20px; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #219150; }
+        #startBtn:active { transform: translateY(5px); box-shadow: none; }
+        #audioFileControl { display: none; margin-top: 20px; background: #f1c40f; padding: 10px; border-radius: 5px; color: black; font-weight: bold; text-align: center; }
+
+        #messageScreen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #e74c3c; color: white; padding: 30px; border-radius: 20px; text-align: center; border: 5px solid white; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 80%; max-width: 400px; }
         #messageScreen.win { background: #2ecc71; }
-        #messageScreen h1 { margin: 0 0 10px 0; font-size: 32px; }
-        #messageScreen button { background: white; color: #333; margin-top: 20px; padding: 10px 20px; border:none; font-weight:bold; cursor:pointer; font-size: 18px; border-radius: 5px;}
+        #messageScreen h1 { margin: 0 0 10px 0; font-size: 28px; }
+        #messageScreen button { background: white; color: #333; margin-top: 20px; padding: 10px 20px; border:none; font-weight:bold; cursor:pointer; font-size: 16px; border-radius: 5px;}
     </style>
 </head>
 <body>
 
-<div id="startHint">TOQUE PARA LIGAR O SOM 🔊</div>
-
-<div id="audioFileControl">
-    ⚠️ Navegador bloqueou arquivos locais.<br>
-    Selecione <b>idle.mp3</b> e <b>rev.mp3</b> aqui:<br><br>
-    <input type="file" id="soundFilesInput" multiple accept="audio/*" style="display:block; margin:0 auto;">
+<div id="rotateOverlay">
+    <div class="rotate-icon">📱</div>
+    <h2>GIRE O CELULAR</h2>
+    <p>Este jogo funciona melhor deitado.</p>
 </div>
 
-<div id="balanceContainer"><div id="balanceFill"></div></div>
-<button id="resetBtn" onclick="resetGame()">↺ REINICIAR</button>
-<div class="score-board">PONTOS: <span id="scoreVal">0</span></div>
-<div id="centerMessageContainer"><div id="centerMessageText"></div></div>
+<div id="startOverlay">
+    <h1>Moto Delivery</h1>
+    <button id="startBtn">JOGAR AGORA ▶</button>
+    
+    <div id="audioFileControl">
+        ⚠️ Arquivos de áudio bloqueados.<br>Selecione idle.mp3 e rev.mp3:<br>
+        <input type="file" id="soundFilesInput" multiple accept="audio/*" style="margin-top:5px;">
+    </div>
+</div>
 
-<div id="dashboard">
-    <div class="gauge">
-        <div id="woodSign">Arroio do Mal</div>
-        <div class="gauge-face">
-            <div class="label-title">VELOCIDADE</div>
-            <div class="label-kmh"><span id="speedVal">0</span> <small>km/h</small></div>
+<div id="gameContainer">
+    <div id="balanceContainer"><div id="balanceFill"></div></div>
+    <button id="resetBtn" onclick="resetGame()">↺</button>
+    <div class="score-board">PTS: <span id="scoreVal">0</span></div>
+    <div id="centerMessageContainer"><div id="centerMessageText"></div></div>
+
+    <div id="dashboard">
+        <div class="gauge">
+            <div id="woodSign">Arroio do Mal</div>
+            <div class="gauge-face">
+                <div class="label-title">VELOCIDADE</div>
+                <div class="label-kmh"><span id="speedVal">0</span> <small>km/h</small></div>
+            </div>
+            <div class="needle" id="needle"></div>
+            <div class="needle-center"></div>
         </div>
-        <div class="needle" id="needle"></div>
-        <div class="needle-center"></div>
     </div>
-</div>
 
-<div class="touch-controls controls-left">
-    <div class="btn btn-arrow" id="btnLeft">↺</div>
-    <div class="btn btn-arrow" id="btnRight" style="margin-left: 10px;">↻</div>
-</div>
-<div class="touch-controls controls-right">
-    <div class="gas-group">
-        <div class="btn btn-brake" id="btnDown">🛑</div>
-        <div class="btn btn-gas" id="btnUp">🚀</div>
+    <div class="touch-controls controls-left">
+        <div class="btn btn-arrow" id="btnLeft">↺</div>
+        <div class="btn btn-arrow" id="btnRight" style="margin-left: 10px;">↻</div>
     </div>
-</div>
+    <div class="touch-controls controls-right">
+        <div class="gas-group">
+            <div class="btn btn-brake" id="btnDown">🛑</div>
+            <div class="btn btn-gas" id="btnUp">🚀</div>
+        </div>
+    </div>
 
-<div id="messageScreen">
-    <h1 id="msgTitle">CRASH! 💥</h1>
-    <p id="msgText">Você virou a moto.</p>
-    <button onclick="resetGame()">TENTAR NOVAMENTE</button>
+    <div id="messageScreen">
+        <h1 id="msgTitle">CRASH! 💥</h1>
+        <p id="msgText">Você virou a moto.</p>
+        <button onclick="resetGame()">TENTAR NOVAMENTE</button>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
@@ -113,11 +214,8 @@
     const FINISH_LINE_X = 45000;
     const SCALE_FACTOR = 1.25; 
 
-    // --- SISTEMA DE SOM COM DISTORÇÃO E CROSSFADE ---
-    let audioCtx;
-    let idleSource, revSource;
-    let idleGain, revGain;
-    let distortionNode; // O segredo do som "malvado"
+    // --- AUDIO SETUP ---
+    let audioCtx, idleSource, revSource, idleGain, revGain;
     let audioInitialized = false;
     let idleBuffer, revBuffer;
 
@@ -129,37 +227,34 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    // Curva de distorção para deixar o motor "áspero"
-    function makeDistortionCurve(amount) {
-        let k = typeof amount === 'number' ? amount : 50,
-            n_samples = 44100,
-            curve = new Float32Array(n_samples),
-            deg = Math.PI / 180,
-            i = 0,
-            x;
-        for ( ; i < n_samples; ++i ) {
-            x = i * 2 / n_samples - 1;
-            curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+    async function startGame() {
+        // Tenta entrar em fullscreen
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(e => console.log(e));
         }
-        return curve;
-    }
-
-    async function autoLoadSounds() {
+        
         initAudioContext();
+        
+        // Tenta carregar áudio
         try {
             const iBuff = await fetch('idle.mp3').then(res => res.arrayBuffer());
             const rBuff = await fetch('rev.mp3').then(res => res.arrayBuffer());
             idleBuffer = await audioCtx.decodeAudioData(iBuff);
             revBuffer = await audioCtx.decodeAudioData(rBuff);
+            
             setupAudioNodes();
             startEngineSounds();
             audioInitialized = true;
-            document.getElementById('startHint').style.display = 'none';
+            
+            document.getElementById('startOverlay').style.display = 'none';
+            resetGame(); // Inicia o jogo
         } catch (e) {
-            document.getElementById('startHint').innerText = "ERRO DE ARQUIVO LOCAL";
+            console.log("Erro fetch local. Exibindo uploader manual.");
             document.getElementById('audioFileControl').style.display = 'block';
         }
     }
+
+    document.getElementById('startBtn').addEventListener('click', startGame);
 
     document.getElementById('soundFilesInput').addEventListener('change', async function(e) {
         initAudioContext();
@@ -172,54 +267,53 @@
             if (file.name.toLowerCase().includes('rev')) revBuffer = audioBuffer;
         }
         if (idleBuffer && revBuffer) {
-            document.getElementById('audioFileControl').style.display = 'none';
-            document.getElementById('startHint').style.display = 'none';
             setupAudioNodes();
             startEngineSounds();
             audioInitialized = true;
+            document.getElementById('startOverlay').style.display = 'none';
+            resetGame();
         }
     });
 
     function setupAudioNodes() {
+        // Cria nó de distorção para dar agressividade
+        const distortion = audioCtx.createWaveShaper();
+        function makeDistortionCurve(amount) {
+            let k = amount, n_samples = 44100, curve = new Float32Array(n_samples), deg = Math.PI / 180, i = 0, x;
+            for ( ; i < n_samples; ++i ) {
+                x = i * 2 / n_samples - 1;
+                curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+            }
+            return curve;
+        }
+        distortion.curve = makeDistortionCurve(20); // Pouca distorção para não estourar
+        distortion.oversample = '4x';
+
         idleGain = audioCtx.createGain();
         revGain = audioCtx.createGain();
         
-        // Cria o nó de distorção
-        distortionNode = audioCtx.createWaveShaper();
-        distortionNode.curve = makeDistortionCurve(50); // Quantidade de distorção (0-100)
-        distortionNode.oversample = '4x';
-
-        // Conexões:
-        // Idle vai direto (som limpo e grave)
         idleGain.connect(audioCtx.destination);
-        
-        // Rev passa pela distorção (som agressivo)
-        revGain.connect(distortionNode);
-        distortionNode.connect(audioCtx.destination);
+        // Rev passa pela distorção
+        revGain.connect(distortion);
+        distortion.connect(audioCtx.destination);
     }
 
     function startEngineSounds() {
-        if(idleSource) try { idleSource.stop(); } catch(e){}
-        if(revSource) try { revSource.stop(); } catch(e){}
+        if(idleSource) try{idleSource.stop()}catch(e){}
+        if(revSource) try{revSource.stop()}catch(e){}
 
         idleSource = audioCtx.createBufferSource();
-        idleSource.buffer = idleBuffer;
-        idleSource.loop = true;
+        idleSource.buffer = idleBuffer; idleSource.loop = true;
         idleSource.connect(idleGain);
 
         revSource = audioCtx.createBufferSource();
-        revSource.buffer = revBuffer;
-        revSource.loop = true;
+        revSource.buffer = revBuffer; revSource.loop = true;
         revSource.connect(revGain);
 
-        idleSource.start(0);
-        revSource.start(0);
+        idleSource.start(0); revSource.start(0);
     }
 
-    window.addEventListener('touchstart', autoLoadSounds, { once: true });
-    window.addEventListener('click', autoLoadSounds, { once: true });
-    window.addEventListener('keydown', autoLoadSounds, { once: true });
-
+    // --- GAME LOGIC ---
     const BIKE_SPECS = {
         name: "Landera do Douglas",
         bodyTexture: 'lander_corpo.png', rearWheelTexture: 'lander_roda_tras.png', frontWheelTexture: 'lander_roda_frente.png',
@@ -311,7 +405,7 @@
 
     function addTouch(elemId, keyCode) {
         const el = document.getElementById(elemId);
-        const handlePress = (e) => { e.preventDefault(); keys[keyCode] = true; el.classList.add('pressed'); if(!audioInitialized) autoLoadSounds(); };
+        const handlePress = (e) => { e.preventDefault(); keys[keyCode] = true; el.classList.add('pressed'); };
         const handleRelease = (e) => { e.preventDefault(); keys[keyCode] = false; el.classList.remove('pressed'); };
         el.addEventListener('touchstart', handlePress); el.addEventListener('touchend', handleRelease);
         el.addEventListener('mousedown', handlePress); el.addEventListener('mouseup', handleRelease); el.addEventListener('mouseleave', handleRelease);
@@ -344,7 +438,6 @@
         document.getElementById('scoreVal').innerText = score;
         if(bikeComposite) Composite.remove(world, bikeComposite);
         createBike(100, 400);
-        // Se tiver áudio, retoma o volume do idle
         if(audioInitialized && idleGain) { 
             idleGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.1);
             revGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
@@ -383,32 +476,21 @@
         const wr = chassis.wheelRear; const wf = chassis.wheelFront;
         const speed = Vector.magnitude(chassis.velocity); const kmh = Math.round(speed * 15);
 
-        // --- LÓGICA DE SOM BASEADA NO ACELERADOR (TORQUE) ---
         if(audioInitialized && idleGain && revGain) {
-            // Esta lógica responde IMEDIATAMENTE ao botão, não apenas à velocidade
-            const isThrottleOn = keys['ArrowUp'];
-            const engineLoad = isThrottleOn ? 1.0 : 0.0; // 1 = Acelerando fundo
+            // RPM Simulado
+            const isThrottle = keys['ArrowUp'];
+            let rpm = (Math.min(kmh, 140) / 140) + (isThrottle ? 0.2 : 0);
+            rpm = Math.min(Math.max(rpm, 0), 1);
 
-            // Volume Mixing (Crossfade rápido)
-            // Se acelerar: Rev sobe pra 100%, Idle cai pra 30%
-            // Se soltar: Rev cai pra 0%, Idle volta pra 100%
-            const targetIdleVol = isThrottleOn ? 0.3 : 1.0;
-            const targetRevVol = isThrottleOn ? 1.0 : 0.0;
+            // Crossfade
+            idleGain.gain.setTargetAtTime(Math.max(0, 1.0 - (rpm * 2)), audioCtx.currentTime, 0.1);
+            revGain.gain.setTargetAtTime(Math.min(1, rpm * 1.5), audioCtx.currentTime, 0.1);
 
-            idleGain.gain.setTargetAtTime(targetIdleVol, audioCtx.currentTime, 0.1);
-            revGain.gain.setTargetAtTime(targetRevVol, audioCtx.currentTime, 0.1);
-
-            // Pitch Shifting (Isso continua dependendo da velocidade + um pouco do acelerador)
-            // Limita o pitch para não virar "esquilo" (max 1.5x)
-            // Idle varia pouco (0.9 a 1.1)
-            idleSource.playbackRate.value = 0.9 + (kmh * 0.002); 
-            
-            // Rev varia mais, simulando subida de giro (0.8 a 1.3)
-            // Adiciona um "boost" de pitch instantâneo quando aperta o botão
-            let revPitch = 0.8 + (kmh * 0.003) + (isThrottleOn ? 0.1 : 0);
-            revSource.playbackRate.value = revPitch;
+            // Pitch
+            idleSource.playbackRate.value = 0.9 + (rpm * 0.1);
+            // Rev pitch varia de 0.7 a 1.3
+            revSource.playbackRate.value = 0.7 + (rpm * 0.6);
         }
-        // ----------------------------------------------------
 
         const rearCollisions = Query.collides(wr, groundBodies);
         const frontCollisions = Query.collides(wf, groundBodies);
@@ -483,8 +565,12 @@
         document.getElementById('speedVal').innerText = kmh;
     });
 
-    createLevel(); resetGame();
-    Render.run(render); Runner.run(Runner.create(), engine);
+    createLevel();
+    // Não inicia o loop físico imediatamente, espera o botão start para evitar conflitos de carregamento inicial
+    Render.run(render); 
+    // O Runner é iniciado dentro do startGame
+    const runner = Runner.create();
+    Runner.run(runner, engine);
 
 </script>
 </body>
