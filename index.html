@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Moto Delivery - Camera Inteligente</title>
+    <title>Moto Delivery - Câmera Fixa</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -496,18 +496,18 @@
         if (wr.angularVelocity > MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, MAX_WHEEL_SPIN);
         if (wr.angularVelocity < -MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, -MAX_WHEEL_SPIN);
 
-        // --- CÂMERA INTELIGENTE (ADAPTATIVA) ---
-        const windowRatio = window.innerWidth / window.innerHeight;
-        // Se a tela for "larga" (PC), a moto fica em baixo (0.75)
-        // Se a tela for "fina" (Celular), a moto sobe para o meio (0.60) para mostrar chão
-        const targetVerticalPos = windowRatio > 1.5 ? 0.75 : 0.60; 
-
-        const zoomFactor = 1.0; 
+        // --- CÂMERA FIXA E SEGURA ---
+        // Antes: usava proporção da tela para tentar adivinhar. 
+        // Agora: Fixado em 0.6 (60% da altura). Moto no meio-baixo. Seguro para tudo.
+        
+        const zoomFactor = 1.1; 
         const viewWidth = window.innerWidth * zoomFactor;
         const viewHeight = window.innerHeight * zoomFactor;
         
+        // Fixamos a posição vertical da moto em 60% da tela (0.60). 
+        // 0.50 seria exatamente no meio. 0.75 era muito embaixo.
         const targetX = viewWidth * 0.20;
-        const targetY = viewHeight * targetVerticalPos; // Posição Y dinâmica
+        const targetY = viewHeight * 0.60; 
 
         render.bounds.min.x = chassis.position.x - targetX;
         render.bounds.max.x = chassis.position.x + (viewWidth - targetX);
