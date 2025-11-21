@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Moto Delivery - Mobile</title>
+    <style>
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #000; 
+            background-image: url('fundo2.jpg'); 
+            background-repeat: repeat-x; 
+            background-size: auto 100vh; 
+            background-position: 0px 0px; 
+            touch-action: none; /* Impede zoom e scroll no celular */
+            user-select: none; /* Impede seleção de texto */
+        }
+        
+        /* BOTÃO DE RESET (Discreto no topo) */
+        #resetBtn {
+            position: absolute; top: 20px; left: 20px;
+            background: #e74c3c; color: white; border: 2px solid #fff;
+            padding: 10px 20px; border-radius: 20px; font-weight: bold;
+            cursor: pointer; z-index: 20; box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+        }
+
+        /* --- CONTROLES DE TOQUE --- */
+        .touch-controls {
+            position: absolute; bottom: 30px;
+            z-index: 100; display: flex; gap: 15px;
+        }
+        
+        .controls-left { left: 30px; }
+        .controls-right { right: 30px; align-items: flex-end; }
+
+        .btn {
+            width: 80px; height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            color: white; font-size: 30px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+            transition: transform 0.1s, background 0.1s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active, .btn.pressed {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+
+        /* Estilos específicos */
+        .btn-gas { width: 100px; height: 100px; background: rgba(46, 204, 113, 0.3); border-color: #2ecc71; }
+        .btn-brake { width: 70px; height: 70px; background: rgba(231, 76, 60, 0.3); border-color: #c0392b; margin-right: 10px; }
+        .btn-arrow { font-size: 40px; }
+
+        /* Container flex para agrupar freio e acelerador */
+        .gas-group { display: flex; align-items: flex-end; gap: 15px; }
+
+        /* PLACAR DE PONTOS */
+        .score-board { 
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 30px;
+            border: 2px solid #fff; color: #fff; font-size: 24px; font-weight: bold;
+            z-index: 10;
+        }
+        #scoreVal { color: #f1c40f; }
+
+        /* MENSAGENS CENTRAIS (GRAU) */
+        #centerMessageContainer {
+            position: absolute; top: 40%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center; z-index: 90;
+            pointer-events: none; display: none;
+            text-shadow: 3px 3px 0 #000;
+            font-family: 'Impact', sans-serif; text-transform: uppercase; white-space: nowrap;
+        }
+        .stage1 { color: #f1c40f; font-size: 48px; }
+        .stage2 { color: #e67e22; font-size: 52px; }
+        .stage3 { color: #2ecc71; font-size: 64px; }
+        .stage4 { color: #3498db; font-size: 80px; animation: pulseBig 0.5s infinite alternate; }
+        @keyframes pulseBig { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        /* BARRA DE EQUILÍBRIO */
+        #balanceContainer {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 15px; background: rgba(0,0,0,0.5);
+            border-radius: 10px; border: 2px solid #fff; display: none; overflow: hidden; z-index: 10;
+        }
+        #balanceFill { height: 100%; width: 0%; background: linear-gradient(90deg, #f1c40f, #e74c3c); transition: width 0.1s linear; }
+
+        /* VELOCÍMETRO - MOVIDO PARA CIMA */
+        #dashboard { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; pointer-events: none; transform: scale(0.8); transform-origin: top right; }
+        .gauge {
+            width: 180px; height: 180px; background: #f4e6c0; border-radius: 50%;
+            border: 8px solid #5d4037;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 4px #8d6e63;
+            position: relative; display: flex; justify-content: center; align-items: center;
+        }
+        .gauge::after, .gauge::before { content: ''; position: absolute; width: 8px; height: 8px; background: #aaa; border-radius: 50%; }
+        .gauge::after { top: 5px; left: 50%; transform: translateX(-50%); box-shadow: 0 154px 0 #aaa; }
+        .gauge::before { left: 5px; top: 50%; transform: translateY(-50%); box-shadow: 154px 0 0 #aaa; }
+        .gauge-face { width: 100%; height: 100%; position: relative; font-family: 'Courier New', monospace; font-weight: bold; color: #222; }
+        .label-kmh { position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #333; }
+        .label-title { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; color: #5d4037; font-weight: bold; text-transform: uppercase; }
+        .needle {
+            position: absolute; top: 50%; left: 50%; width: 6px; height: 70px; background: #c0392b;
+            border-radius: 5px; transform-origin: bottom center; transform: translate(-50%, -100%) rotate(-135deg);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3); transition: transform 0.1s linear; z-index: 2;
+        }
+        .needle-center { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; background: #333; transform: translate(-50%, -50%); border-radius: 50%; z-index: 3; }
+        #woodSign {
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            background: #8b4513; color: #fff; padding: 5px 15px; border: 2px solid #5d4037;
+            border-radius: 4px; font-family: 'Comic Sans MS', cursive; font-size: 14px; white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #messageScreen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #e74c3c; color: white; padding: 40px; border-radius: 20px; text-align: center; border: 5px solid white; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        #messageScreen.win { background: #2ecc71; }
+        #messageScreen h1 { margin: 0 0 10px 0; font-size: 32px; }
+        #messageScreen button { background: white; color: #333; margin-top: 20px; padding: 10px 20px; border:none; font-weight:bold; cursor:pointer; font-size: 18px; border-radius: 5px;}
+    </style>
+</head>
+<body>
+
+<div id="balanceContainer"><div id="balanceFill"></div></div>
+
+<button id="resetBtn" onclick="resetGame()">↺ REINICIAR</button>
+
+<div class="score-board">PONTOS: <span id="scoreVal">0</span></div>
+
+<div id="centerMessageContainer">
+    <div id="centerMessageText"></div>
+</div>
+
+<div id="dashboard">
+    <div class="gauge">
+        <div id="woodSign">Arroio do Mal</div>
+        <div class="gauge-face">
+            <div class="label-title">VELOCIDADE</div>
+            <div class="label-kmh"><span id="speedVal">0</span> <small>km/h</small></div>
+        </div>
+        <div class="needle" id="needle"></div>
+        <div class="needle-center"></div>
+    </div>
+</div>
+
+<div class="touch-controls controls-left">
+    <div class="btn btn-arrow" id="btnLeft">↺</div> <div class="btn btn-arrow" id="btnRight" style="margin-left: 10px;">↻</div> </div>
+
+<div class="touch-controls controls-right">
+    <div class="gas-group">
+        <div class="btn btn-brake" id="btnDown">🛑</div> <div class="btn btn-gas" id="btnUp">🚀</div> </div>
+</div>
+
+<div id="messageScreen">
+    <h1 id="msgTitle">CRASH! 💥</h1>
+    <p id="msgText">Você virou a moto.</p>
+    <button onclick="resetGame()">TENTAR NOVAMENTE</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+<script>
+    const Engine = Matter.Engine, Render = Matter.Render, Runner = Matter.Runner,
+          Bodies = Matter.Bodies, Body = Matter.Body, Composite = Matter.Composite,
+          Constraint = Matter.Constraint, Events = Matter.Events, Vector = Matter.Vector, Query = Matter.Query;
+
+    const engine = Engine.create();
+    const world = engine.world;
+    
+    engine.positionIterations = 10; 
+    engine.velocityIterations = 10;
+    world.gravity.y = 1.2; 
+
+    const render = Render.create({
+        element: document.body, engine: engine,
+        options: { 
+            width: window.innerWidth, 
+            height: window.innerHeight, 
+            wireframes: false, 
+            background: 'transparent', 
+            hasBounds: true 
+        }
+    });
+
+    let chassis, riderBody, bikeComposite, currentStats, isGameOver = false;
+    let groundBodies = []; 
+    let score = 0; 
+    let wheelieStartTime = null; 
+
+    const FINISH_LINE_X = 45000;
+    const SCALE_FACTOR = 1.25; 
+
+    // Apenas a Lander configurada
+    const BIKE_SPECS = {
+        name: "Landera do Douglas",
+        bodyTexture: 'lander_corpo.png', rearWheelTexture: 'lander_roda_tras.png', frontWheelTexture: 'lander_roda_frente.png',
+        riderTexture: 'piloto.png', riderScale: 0.15, riderOffset: {x: -22, y: -29},
+        
+        bodyScale: 0.169, rearWheelScale: 0.05, frontWheelScale: 0.054,
+        axleOffset: 60, bodyHeight: 40,
+        color: '#111', wheelSize: 24, clearance: 30,
+        density: 0.5, torque: 0.45, climbForce: 0.3, maxSpeedKmh: 180,  
+        rotationSpeed: 0.004, maxRotation: 0.12
+    };
+
+    function createBike(x, y) {
+        const stats = BIKE_SPECS;
+        currentStats = stats;
+        const group = Body.nextGroup(true); 
+        const S = SCALE_FACTOR; 
+
+        const chassisW = 110 * S;
+        const chassisH = 30 * S;
+        const wheelSizeScaled = (stats.wheelSize || 24) * S;
+        const axleOffsetScaled = stats.axleOffset * S;
+        const bodyHeightScaled = stats.bodyHeight * S;
+
+        let renderBody = { fillStyle: stats.color, strokeStyle: 'black', lineWidth: 2 };
+        let renderRear = { fillStyle: 'transparent', strokeStyle: '#222', lineWidth: 8 * S };
+        let renderFront = { fillStyle: 'transparent', strokeStyle: '#222', lineWidth: 8 * S };
+        let renderRider = { fillStyle: '#f1c27d', strokeStyle: '#333', lineWidth: 2 };
+
+        if (stats.bodyTexture) renderBody = { sprite: { texture: stats.bodyTexture, xScale: stats.bodyScale * S, yScale: stats.bodyScale * S } };
+        if (stats.rearWheelTexture) renderRear = { sprite: { texture: stats.rearWheelTexture, xScale: stats.rearWheelScale * S, yScale: stats.rearWheelScale * S } };
+        if (stats.frontWheelTexture) renderFront = { sprite: { texture: stats.frontWheelTexture, xScale: stats.frontWheelScale * S, yScale: stats.frontWheelScale * S } };
+        if (stats.riderTexture) renderRider = { sprite: { texture: stats.riderTexture, xScale: stats.riderScale * S, yScale: stats.riderScale * S } };
+        
+        chassis = Bodies.rectangle(x, y - 30 * S, chassisW, chassisH, { 
+            collisionFilter: { group: group }, density: stats.density, 
+            friction: 0.5, frictionAir: 0.03, render: renderBody, label: 'chassis'
+        });
+
+        const currentOffsetX = stats.riderOffset.x;
+        const currentOffsetY = stats.riderOffset.y;
+        const riderSize = 25 * S; 
+        const riderStartX = x + (currentOffsetX * S);
+        const riderStartY = (y - 30 * S) + (currentOffsetY * S);
+
+        riderBody = Bodies.circle(riderStartX, riderStartY, riderSize, {
+            collisionFilter: { group: group }, density: 0.05, friction: 0.5, render: renderRider, label: 'rider' 
+        });
+
+        const riderJoint = Constraint.create({
+            bodyA: chassis, bodyB: riderBody, pointA: { x: currentOffsetX * S, y: currentOffsetY * S }, pointB: { x: 0, y: 0 }, stiffness: 1, damping: 0.1, length: 0, render: { visible: false }
+        });
+
+        const wheelOptsRear = { collisionFilter: { group: group }, friction: 0.8, density: 0.05, restitution: 0, render: renderRear, label: 'wheelRear' }; 
+        const wheelOptsFront = { collisionFilter: { group: group }, friction: 0.8, density: 0.05, restitution: 0, render: renderFront, label: 'wheelFront' }; 
+        
+        const wheelY = y + 15 * S; 
+        const wheelRear = Bodies.circle(x - axleOffsetScaled, wheelY, wheelSizeScaled, wheelOptsRear);
+        const wheelFront = Bodies.circle(x + axleOffsetScaled, wheelY, wheelSizeScaled, wheelOptsFront);
+
+        const suspensionOptions = { stiffness: 0.3, damping: 0.3, length: 0, render: { visible: false } };
+
+        const axelRear = Constraint.create({ bodyA: chassis, bodyB: wheelRear, pointA: { x: -axleOffsetScaled, y: bodyHeightScaled }, pointB: { x: 0, y: 0 }, ...suspensionOptions });
+        const axelFront = Constraint.create({ bodyA: chassis, bodyB: wheelFront, pointA: { x: axleOffsetScaled, y: bodyHeightScaled }, pointB: { x: 0, y: 0 }, ...suspensionOptions });
+
+        bikeComposite = Composite.create({ bodies: [chassis, wheelRear, wheelFront, riderBody], constraints: [axelRear, axelFront, riderJoint] });
+        Composite.add(world, bikeComposite);
+        chassis.wheelRear = wheelRear;
+        chassis.wheelFront = wheelFront;
+    }
+
+    function createLevel() {
+        groundBodies = []; 
+        const T = 40; 
+        const C = '#000000'; 
+        const groundOpts = { isStatic: true, friction: 1, restitution: 0, render: { fillStyle: C }, label: 'ground' };
+
+        const pts = [ 
+            {x:0,y:500},{x:1000,y:500}, 
+            {x:1400,y:600},{x:1800,y:450},{x:2200,y:600}, 
+            {x:3000,y:500},{x:4000,y:800}, 
+            {x:6000,y:1100},{x:7500,y:1100}, 
+            {x:10000,y:200}, 
+            {x:11000,y:200},{x:13000,y:600}, 
+            {x:15000,y:600},{x:17000,y:400},{x:19000,y:600}, 
+            {x:21000,y:500},{x:22000,y:500}, 
+            {x:24000,y:700},{x:26000,y:300}, 
+            {x:28000,y:300},{x:30000,y:800}, 
+            {x:32000,y:800},{x:33000,y:600},{x:34000,y:800}, 
+            {x:36000,y:500},{x:38000,y:200}, 
+            {x:40000,y:500},{x:42000,y:500},{x:45000,y:500} 
+        ];
+        
+        for(let i=0; i<pts.length-1; i++){
+            let corner = Bodies.circle(pts[i].x, pts[i].y, T/2, groundOpts);
+            groundBodies.push(corner);
+            
+            let v = Vector.sub(pts[i+1], pts[i]), len = Vector.magnitude(v), ang = Vector.angle(v, {x:1,y:0}), mid = Vector.add(pts[i], Vector.mult(v,0.5));
+            let rect = Bodies.rectangle(mid.x, mid.y, len+T, T, { ...groundOpts, angle: ang });
+            groundBodies.push(rect);
+        }
+        groundBodies.push(Bodies.circle(pts[pts.length-1].x, pts[pts.length-1].y, T/2, groundOpts));
+        
+        Composite.add(world, [...groundBodies, 
+            Bodies.rectangle(FINISH_LINE_X, 450, 15, 300, { isStatic: true, isSensor: true, render: { fillStyle: '#fff' } }),
+            Bodies.rectangle(FINISH_LINE_X + 50, 320, 100, 80, { isStatic: true, isSensor: true, render: { fillStyle: '#e74c3c' } }),
+            Bodies.rectangle(FINISH_LINE_X, 600, 200, 10, { isStatic: true, render: { fillStyle: '#fff' } })
+        ]);
+    }
+
+    // --- CONTROLES (TECLADO + TOUCH) ---
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.code] = true);
+    window.addEventListener('keyup', e => keys[e.code] = false);
+    window.addEventListener('keydown', e => { if(e.key.toLowerCase() === 'r') resetGame(); });
+
+    // Função para ligar botões da tela às teclas
+    function addTouch(elemId, keyCode) {
+        const el = document.getElementById(elemId);
+        // Touch Events
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyCode] = true; el.classList.add('pressed'); });
+        el.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyCode] = false; el.classList.remove('pressed'); });
+        // Mouse Events (para testar no PC com mouse)
+        el.addEventListener('mousedown', (e) => { keys[keyCode] = true; el.classList.add('pressed'); });
+        el.addEventListener('mouseup', (e) => { keys[keyCode] = false; el.classList.remove('pressed'); });
+        el.addEventListener('mouseleave', (e) => { keys[keyCode] = false; el.classList.remove('pressed'); });
+    }
+
+    addTouch('btnUp', 'ArrowUp');
+    addTouch('btnDown', 'ArrowDown');
+    addTouch('btnLeft', 'ArrowLeft');
+    addTouch('btnRight', 'ArrowRight');
+
+
+    function showCenterMessage(text, className) {
+        const container = document.getElementById('centerMessageContainer');
+        const msgText = document.getElementById('centerMessageText');
+        msgText.innerText = text;
+        msgText.className = className; 
+        container.style.display = 'block';
+    }
+
+    function endGame(won) {
+        isGameOver = true;
+        document.getElementById('centerMessageContainer').style.display = 'none'; 
+        const screen = document.getElementById('messageScreen');
+        const title = document.getElementById('msgTitle');
+        const txt = document.getElementById('msgText');
+        screen.style.display = 'block';
+        if(won) { screen.className = 'win'; title.innerText = "ENTREGUE! 📦"; txt.innerText = `Pontuação Final: ${score}`; }
+        else { screen.className = ''; title.innerText = "CRASH! 💥"; txt.innerText = "Você virou a moto."; }
+    }
+
+    function resetGame() {
+        document.getElementById('messageScreen').style.display = 'none';
+        document.getElementById('balanceContainer').style.display = 'none';
+        document.getElementById('centerMessageContainer').style.display = 'none';
+        isGameOver = false;
+        score = 0; 
+        wheelieStartTime = null; 
+        document.getElementById('scoreVal').innerText = score;
+        if(bikeComposite) Composite.remove(world, bikeComposite);
+        createBike(100, 400);
+    }
+
+    Events.on(render, 'afterRender', () => {
+        if (!chassis || !chassis.wheelRear) return;
+        if (!currentStats.rearWheelTexture) {
+            const ctx = render.context; ctx.beginPath(); ctx.lineWidth = 4; ctx.strokeStyle = '#333';
+            const wr = chassis.wheelRear;
+            ctx.moveTo(wr.position.x, wr.position.y);
+            ctx.lineTo(wr.position.x + Math.cos(wr.angle)*wr.circleRadius, wr.position.y + Math.sin(wr.angle)*wr.circleRadius);
+            ctx.stroke();
+        }
+    });
+
+    Events.on(engine, 'collisionStart', (event) => {
+        if(isGameOver) return;
+        const pairs = event.pairs;
+        for (let i = 0; i < pairs.length; i++) {
+            const bodyA = pairs[i].bodyA; const bodyB = pairs[i].bodyB;
+            if ((bodyA.label === 'chassis' && bodyB.label === 'ground') || (bodyB.label === 'chassis' && bodyA.label === 'ground') ||
+                (bodyA.label === 'rider' && bodyB.label === 'ground') || (bodyB.label === 'rider' && bodyA.label === 'ground')) { 
+                endGame(false); 
+            }
+        }
+    });
+
+    Events.on(engine, 'beforeUpdate', () => {
+        if (!chassis || isGameOver) return;
+        
+        if (riderBody && chassis) {
+            Body.setAngle(riderBody, chassis.angle);
+            Body.setAngularVelocity(riderBody, chassis.angularVelocity);
+        }
+
+        if (chassis.position.x >= FINISH_LINE_X) endGame(true);
+
+        const wr = chassis.wheelRear;
+        const wf = chassis.wheelFront;
+        const speed = Vector.magnitude(chassis.velocity);
+        const kmh = Math.round(speed * 15);
+
+        // --- LÓGICA AVANÇADA DE GRAU ---
+        const rearCollisions = Query.collides(wr, groundBodies);
+        const frontCollisions = Query.collides(wf, groundBodies);
+        const rearOnGround = rearCollisions.length > 0;
+        const frontOnGround = frontCollisions.length > 0;
+
+        const isDoingWheelie = rearOnGround && !frontOnGround && kmh > 10;
+
+        if (isDoingWheelie) {
+            if (wheelieStartTime === null) {
+                wheelieStartTime = Date.now();
+            }
+
+            const currentDuration = (Date.now() - wheelieStartTime) / 1000;
+            let pointsMultiplier = 1;
+
+            if (currentDuration > 8) {
+                 showCenterMessage("Mestre do Grau!! 👑", "stage4");
+                 pointsMultiplier = 20; 
+            } else if (currentDuration > 5) {
+                 showCenterMessage("Bom Grau! 👍", "stage3");
+                 pointsMultiplier = 10;
+            } else if (currentDuration > 4) {
+                 showCenterMessage("Grau Murcho 😐", "stage2");
+                 pointsMultiplier = 5;
+            } else if (currentDuration > 1) { 
+                 showCenterMessage("Chama no Grau!! 🔥", "stage1");
+                 pointsMultiplier = 2;
+            }
+
+            if (currentDuration > 1) {
+                score += pointsMultiplier;
+                document.getElementById('scoreVal').innerText = score;
+            }
+
+        } else {
+            wheelieStartTime = null;
+            document.getElementById('centerMessageContainer').style.display = 'none';
+        }
+
+        const MAX_WHEEL_SPIN = 0.6;
+        if (wr.angularVelocity > MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, MAX_WHEEL_SPIN);
+        if (wr.angularVelocity < -MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, -MAX_WHEEL_SPIN);
+
+        // Câmera
+        const zoomFactor = 1.2;
+        const viewWidth = window.innerWidth * zoomFactor;
+        const viewHeight = window.innerHeight * zoomFactor;
+        const targetX = viewWidth * 0.20;
+        const targetY = viewHeight * 0.75;
+
+        render.bounds.min.x = chassis.position.x - targetX;
+        render.bounds.max.x = chassis.position.x + (viewWidth - targetX);
+        render.bounds.min.y = chassis.position.y - targetY;
+        render.bounds.max.y = chassis.position.y + (viewHeight - targetY);
+        
+        const parallaxFactor = 0.5; 
+        const bgOffsetX = -render.bounds.min.x * parallaxFactor;
+        document.body.style.backgroundPositionX = bgOffsetX + "px";
+
+        // Barra de equilíbrio
+        const angle = chassis.angle;
+        const balanceBar = document.getElementById('balanceContainer');
+        const balanceFill = document.getElementById('balanceFill');
+        if (angle < -0.4) {
+            balanceBar.style.display = 'block'; 
+            let dangerPct = ((-angle - 0.4) / 1.0) * 100;
+            balanceFill.style.width = Math.min(Math.max(dangerPct, 0), 100) + '%';
+            if (dangerPct >= 99) endGame(false);
+        } else {
+            balanceBar.style.display = 'none';
+        }
+
+        // Aplicação dos Inputs (Teclado ou Touch)
+        if (keys['ArrowUp']) {
+            let effectiveTorque = currentStats.torque;
+            if (kmh > 100) effectiveTorque *= 0.5; 
+            if (angle < -0.8) effectiveTorque *= 0.1; 
+
+            if (kmh < currentStats.maxSpeedKmh) {
+                Body.setAngularVelocity(wr, wr.angularVelocity + effectiveTorque);
+                const f = currentStats.climbForce; 
+                Body.applyForce(chassis, chassis.position, {x: Math.cos(chassis.angle)*f, y: Math.sin(chassis.angle)*f});
+            }
+        }
+        if (keys['ArrowDown']) Body.setAngularVelocity(wr, wr.angularVelocity - currentStats.torque);
+        
+        const rf = currentStats.rotationSpeed, mr = currentStats.maxRotation;          
+        if (keys['ArrowLeft'] && chassis.angularVelocity > -mr) Body.setAngularVelocity(chassis, chassis.angularVelocity - rf);
+        if (keys['ArrowRight'] && chassis.angularVelocity < mr) Body.setAngularVelocity(chassis, chassis.angularVelocity + rf);
+
+        const maxGauge = 220;
+        const displaySpeed = Math.min(kmh, maxGauge);
+        const angleGauge = -135 + (displaySpeed / maxGauge) * 270;
+        document.getElementById('needle').style.transform = `translate(-50%, -100%) rotate(${angleGauge}deg)`;
+        document.getElementById('speedVal').innerText = kmh;
+    });
+
+    createLevel(); resetGame();
+    Render.run(render); Runner.run(Runner.create(), engine);
+
+</script>
+</body>
+</html>
