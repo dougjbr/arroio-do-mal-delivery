@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Moto Delivery - Câmera Fixa</title>
+    <title>Moto Delivery - Câmera Corrigida</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -496,18 +496,15 @@
         if (wr.angularVelocity > MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, MAX_WHEEL_SPIN);
         if (wr.angularVelocity < -MAX_WHEEL_SPIN) Body.setAngularVelocity(wr, -MAX_WHEEL_SPIN);
 
-        // --- CÂMERA FIXA E SEGURA ---
-        // Antes: usava proporção da tela para tentar adivinhar. 
-        // Agora: Fixado em 0.6 (60% da altura). Moto no meio-baixo. Seguro para tudo.
-        
+        // --- CÂMERA CORRIGIDA (FOCADA NO TOPO) ---
+        // 35% (0.35) a partir do topo = Moto na parte SUPERIOR da tela
+        // Isso força a câmera a olhar para baixo, mostrando o chão.
         const zoomFactor = 1.1; 
         const viewWidth = window.innerWidth * zoomFactor;
         const viewHeight = window.innerHeight * zoomFactor;
         
-        // Fixamos a posição vertical da moto em 60% da tela (0.60). 
-        // 0.50 seria exatamente no meio. 0.75 era muito embaixo.
         const targetX = viewWidth * 0.20;
-        const targetY = viewHeight * 0.60; 
+        const targetY = viewHeight * 0.35; // Moto mais alta = Mais chão visível
 
         render.bounds.min.x = chassis.position.x - targetX;
         render.bounds.max.x = chassis.position.x + (viewWidth - targetX);
